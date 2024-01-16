@@ -1,22 +1,48 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { MailerController } from './mailer.controller';
 import { MailerService } from './mailer.service';
+import { SendEmailDto } from './sendmail.dto';
+import { Test, TestingModule } from '@nestjs/testing';
 
-describe('AppController', () => {
-  let appController: MailerController;
+describe('MailerController', () => {
+  let mailerController: MailerController;
+  let mailerService: MailerService;
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [MailerController],
-      providers: [MailerService],
+      providers: [
+        {
+          provide: MailerService,
+          useValue: {
+            sendMail: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    appController = app.get<MailerController>(MailerController);
+    mailerController = module.get<MailerController>(MailerController);
+    mailerService = module.get<MailerService>(MailerService);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      // expect(appController.getHello()).toBe('Hello World!');
+  it('should be defined', () => {
+    expect(mailerController).toBeDefined();
+  });
+
+  describe('sendEmail', () => {
+    it('should call sendMail method from MailerService with the correct parameters', async () => {
+      const sendEmailDto: SendEmailDto = {
+        to: 'test@example.com',
+        subject: 'Test Subject',
+        text: 'Test Message',
+      };
+
+      await mailerController.sendEmail(sendEmailDto);
+
+      expect(mailerService.sendMail).toHaveBeenCalledWith(
+        sendEmailDto.to,
+        sendEmailDto.subject,
+        sendEmailDto.text
+      );
     });
   });
 });
